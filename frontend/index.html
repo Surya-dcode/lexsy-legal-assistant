@@ -1,0 +1,46 @@
+<!-- frontend/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lexsy AI Assistant</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="header">
+    <div class="logo">⚖️ Lexsy AI Assistant</div>
+    <div class="status">Status: <span id="status-text">Ready</span></div>
+  </header>
+
+  <main class="container">
+    <aside class="sidebar">
+      <h3>Client</h3>
+      <select id="client-select">
+        <option value="1">Lexsy, Inc.</option>
+        <option value="2">TechCorp LLC</option>
+      </select>
+
+      <h3>Upload Document</h3>
+      <input type="file" id="doc-input" />
+      <button id="upload-btn">Upload</button>
+
+      <h3>Sample Actions</h3>
+      <button id="load-emails">Load Sample Emails</button>
+    </aside>
+
+    <section class="main-panel">
+      <div class="chat-box" id="chat-box">
+        <div class="message bot">Hi! Ask me anything about your legal docs or emails.</div>
+      </div>
+
+      <div class="chat-input">
+        <textarea id="chat-input" placeholder="Ask a legal question..."></textarea>
+        <button id="send-btn">Send</button>
+      </div>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
