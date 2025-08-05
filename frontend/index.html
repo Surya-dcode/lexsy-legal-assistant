@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Lexsy AI Assistant</title>
+  <title>Lexsy AI Assistant - Legal Document & Gmail Analysis</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -21,8 +21,13 @@
         <option value="2">TechCorp LLC</option>
       </select>
 
+      <h3>Gmail Integration</h3>
+      <button id="gmail-auth-btn">Connect Gmail</button>
+      <button id="gmail-mock-btn">Load Mock Gmail Thread</button>
+      <div id="gmail-status" class="status-indicator"></div>
+
       <h3>Upload Document</h3>
-      <input type="file" id="doc-input" />
+      <input type="file" id="doc-input" accept=".pdf,.docx,.txt" />
       <button id="upload-btn">Upload</button>
 
       <h3>Sample Actions</h3>
@@ -31,11 +36,14 @@
 
     <section class="main-panel">
       <div class="chat-box" id="chat-box">
-        <div class="message bot">Hi! Ask me anything about your legal docs or emails.</div>
+        <div class="message bot">
+          Hi! I'm your Lexsy AI Assistant with Gmail integration. 
+          Connect Gmail or load mock emails, upload documents, then ask me questions!
+        </div>
       </div>
 
       <div class="chat-input">
-        <textarea id="chat-input" placeholder="Ask a legal question..."></textarea>
+        <textarea id="chat-input" placeholder="Ask about your legal docs or Gmail threads..."></textarea>
         <button id="send-btn">Send</button>
       </div>
     </section>
