@@ -3,16 +3,13 @@
 // Configuration - UPDATE THIS FOR PRODUCTION
 const API_BASE = window.location.hostname === 'localhost' 
   ? 'http://localhost:8000' 
-  : 'https://your-railway-app.railway.app';  // UPDATE WITH YOUR RAILWAY URL
+  : window.location.origin;  // Will use same origin as frontend
 
 // DOM Elements
 const clientSelect = document.getElementById('client-select');
 const docInput = document.getElementById('doc-input');
 const uploadBtn = document.getElementById('upload-btn');
-const loadEmailsBtn = document.getElementById('load-emails');
-const gmailAuthBtn = document.getElementById('gmail-auth-btn');
 const gmailMockBtn = document.getElementById('gmail-mock-btn');
-const gmailStatus = document.getElementById('gmail-status');
 const chatBox = document.getElementById('chat-box');
 const chatInput = document.getElementById('chat-input');
 const sendBtn = document.getElementById('send-btn');
@@ -26,20 +23,6 @@ function updateStatus(message, isError = false) {
         statusText.textContent = 'Ready';
         statusText.style.color = '#6b7280';
     }, 3000);
-}
-
-function updateGmailStatus(isConnected) {
-    if (isConnected) {
-        gmailStatus.textContent = '✅ Gmail Connected';
-        gmailStatus.className = 'status-indicator connected';
-        gmailAuthBtn.textContent = 'Gmail Connected';
-        gmailAuthBtn.disabled = true;
-    } else {
-        gmailStatus.textContent = '❌ Gmail Not Connected';
-        gmailStatus.className = 'status-indicator disconnected';
-        gmailAuthBtn.textContent = 'Connect Gmail';
-        gmailAuthBtn.disabled = false;
-    }
 }
 
 function addMessage(content, isUser = false, messageType = null) {
@@ -129,75 +112,18 @@ uploadBtn.addEventListener('click', async () => {
 
         const result = await response.json();
         
-        if (result.success) {
+        if (response.ok && result.success) {
             updateStatus('Document uploaded successfully!');
-            addMessage(`📄 Uploaded: ${file.name}`, false, 'success');
+            addMessage(`📄 Uploaded: ${file.name} (${result.chunks_processed} chunks processed)`, false, 'success');
             docInput.value = '';
         } else {
-            updateStatus(`Upload failed: ${result.error}`, true);
+            updateStatus(`Upload failed: ${result.detail || result.error}`, true);
         }
     } catch (error) {
         updateStatus(`Upload error: ${error.message}`, true);
         console.error('Upload error:', error);
     } finally {
         uploadBtn.disabled = false;
-    }
-});
-
-loadEmailsBtn.addEventListener('click', async () => {
-    const clientId = clientSelect.value;
-    
-    try {
-        updateStatus('Loading sample emails...');
-        loadEmailsBtn.disabled = true;
-        
-        const response = await fetch(`${API_BASE}/api/emails/${clientId}/ingest-sample-emails`, {
-            method: 'POST'
-        });
-
-        const result = await response.json();
-        
-        if (result.success) {
-            updateStatus('Sample emails loaded!');
-            addMessage(`📧 Loaded ${result.emails_processed} sample emails`, false, 'success');
-        } else {
-            updateStatus(`Failed to load emails: ${result.error}`, true);
-        }
-    } catch (error) {
-        updateStatus(`Email loading error: ${error.message}`, true);
-        console.error('Email loading error:', error);
-    } finally {
-        loadEmailsBtn.disabled = false;
-    }
-});
-
-// Gmail Authentication
-gmailAuthBtn.addEventListener('click', async () => {
-    try {
-        updateStatus('Initiating Gmail authentication...');
-        const response = await fetch(`${API_BASE}/auth/gmail`);
-        const result = await response.json();
-        
-        if (result.auth_url) {
-            updateStatus('Opening Gmail authentication...');
-            // Open Gmail auth in popup
-            const popup = window.open(result.auth_url, 'gmail-auth', 'width=600,height=600,scrollbars=yes,resizable=yes');
-            
-            // Check for popup close or successful auth
-            const checkClosed = setInterval(() => {
-                if (popup.closed) {
-                    clearInterval(checkClosed);
-                    updateStatus('Checking authentication status...');
-                    // Check auth status after popup closes
-                    setTimeout(checkGmailAuthStatus, 1000);
-                }
-            }, 1000);
-        } else {
-            updateStatus('Failed to get Gmail auth URL', true);
-        }
-    } catch (error) {
-        updateStatus(`Gmail auth error: ${error.message}`, true);
-        console.error('Gmail auth error:', error);
     }
 });
 
@@ -215,11 +141,11 @@ gmailMockBtn.addEventListener('click', async () => {
 
         const result = await response.json();
         
-        if (result.success) {
+        if (response.ok && result.success) {
             updateStatus('Mock Gmail thread loaded!');
-            addMessage(`📧 Loaded ${result.emails_processed} emails from advisor equity thread`, false, 'success');
+            addMessage(`📧 Loaded ${result.emails_processed} emails from advisor equity thread (${result.chunks_created} chunks)`, false, 'success');
         } else {
-            updateStatus(`Failed to load Gmail thread: ${result.error}`, true);
+            updateStatus(`Failed to load Gmail thread: ${result.detail || result.error}`, true);
         }
     } catch (error) {
         updateStatus(`Gmail loading error: ${error.message}`, true);
@@ -228,22 +154,6 @@ gmailMockBtn.addEventListener('click', async () => {
         gmailMockBtn.disabled = false;
     }
 });
-
-async function checkGmailAuthStatus() {
-    try {
-        const response = await fetch(`${API_BASE}/auth/gmail/status`);
-        const result = await response.json();
-        updateGmailStatus(result.authenticated);
-        
-        if (result.authenticated) {
-            updateStatus('Gmail connected successfully!');
-            addMessage('✅ Gmail authentication successful! You can now ingest real Gmail threads.', false, 'success');
-        }
-    } catch (error) {
-        console.error('Error checking Gmail status:', error);
-        updateGmailStatus(false);
-    }
-}
 
 async function sendMessage() {
     const question = chatInput.value.trim();
@@ -269,12 +179,12 @@ async function sendMessage() {
 
         const result = await response.json();
         
-        if (result.success) {
+        if (response.ok && result.success) {
             updateStatus('Response received');
             addBotMessageWithSources(result.answer, result.sources);
         } else {
-            updateStatus(`AI error: ${result.error}`, true);
-            addMessage(`❌ Error: ${result.error}`, false, 'error');
+            updateStatus(`AI error: ${result.detail || result.error}`, true);
+            addMessage(`❌ Error: ${result.detail || result.error}`, false, 'error');
         }
     } catch (error) {
         updateStatus(`Request failed: ${error.message}`, true);
@@ -303,24 +213,6 @@ docInput.addEventListener('change', (e) => {
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
-    addMessage('Hi! I\'m your Lexsy AI Assistant with Gmail integration. Upload documents or load Gmail emails, then ask me questions about them.');
+    addMessage('Hi! I\'m your Lexsy AI Assistant. Upload documents or load the mock Gmail thread, then ask me questions about them.');
     updateStatus('Ready');
-    
-    // Check Gmail auth status on load
-    checkGmailAuthStatus();
-    
-    // Handle Gmail auth callback
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('gmail_auth') === 'success') {
-        updateStatus('Gmail authentication successful!');
-        addMessage('✅ Gmail authentication successful!', false, 'success');
-        checkGmailAuthStatus();
-        // Clean up URL
-        window.history.replaceState({}, document.title, window.location.pathname);
-    } else if (urlParams.get('gmail_auth') === 'error') {
-        const errorMsg = urlParams.get('message') || 'Unknown error';
-        updateStatus(`Gmail auth failed: ${errorMsg}`, true);
-        addMessage(`❌ Gmail authentication failed: ${errorMsg}`, false, 'error');
-        window.history.replaceState({}, document.title, window.location.pathname);
-    }
 });
